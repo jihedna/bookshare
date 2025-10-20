@@ -1,0 +1,244 @@
+@php
+use Illuminate\Support\Facades\Auth;
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>{{ config('app.name', 'BookShare') }} - @yield('title', 'Partagez des Livres avec votre Communauté')</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- Styles -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
+</head>
+<body class="font-sans antialiased bg-light text-dark min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a href="{{ route('home') }}" class="flex items-center space-x-2">
+                    <span class="text-primary text-2xl"><i class="ri-book-open-line"></i></span>
+                    <span class="font-bold text-xl">BookShare</span>
+                </a>
+                
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{{ route('books.index') }}" class="hover:text-primary transition-colors">Livres</a>
+                    @auth
+                        @if(Auth::user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="text-primary hover:text-primary/80 transition-colors font-medium">
+                                <i class="ri-admin-line mr-1"></i> Administration
+                            </a>
+                        @endif
+                    @endauth
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                
+                
+                @auth
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=1E40AF&color=ffffff" 
+                                alt="{{ Auth::user()->name }}" 
+                                class="w-8 h-8 rounded-full">
+                            <span class="hidden md:inline">{{ Auth::user()->name }}</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </button>
+                        
+                        <div x-show="open" 
+                            @click.away="open = false"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                            
+                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="ri-user-line mr-2"></i> Profil
+                            </a>
+                            
+                            @if(Auth::user()->isAdmin())
+                                <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 hover:bg-gray-100 text-primary font-medium">
+                                    <i class="ri-admin-line mr-2"></i> Administration
+                                </a>
+                            @else
+                                <a href="{{ route('dashboard') }}" class="block px-4 py-2 hover:bg-gray-100">
+                                    <i class="ri-dashboard-line mr-2"></i> Tableau de bord
+                                </a>
+                            @endif
+                            
+                            <a href="{{ route('books.my') }}" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="ri-book-line mr-2"></i> Mes Livres
+                            </a>
+                            <a href="{{ route('loans.index') }}" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="ri-exchange-line mr-2"></i> Mes Emprunts
+                            </a>
+                            
+                            <hr class="my-1">
+                            
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+                                    <i class="ri-logout-box-line mr-2"></i> Déconnexion
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-primary">
+                        <i class="ri-login-box-line mr-1"></i> Connexion
+                    </a>
+                    <a href="{{ route('register') }}" class="hidden md:inline-block btn btn-secondary">
+                        <i class="ri-user-add-line mr-1"></i> Inscription
+                    </a>
+                @endauth
+                
+                <button class="md:hidden text-2xl" id="mobile-menu-button">
+                    <i class="ri-menu-line"></i>
+                </button>
+            </div>
+        </nav>
+        
+        <!-- Mobile Navigation -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-3 space-y-3">
+               
+                
+                <div class="space-y-2">
+                    <a href="{{ route('books.index') }}" class="block hover:text-primary transition-colors">
+                        <i class="ri-book-2-line mr-2"></i> Livres
+                    </a>
+                    @auth
+                        <a href="{{ route('books.my') }}" class="block hover:text-primary transition-colors">
+                            <i class="ri-book-line mr-2"></i> Mes Livres
+                        </a>
+                        <a href="{{ route('loans.index') }}" class="block hover:text-primary transition-colors">
+                            <i class="ri-exchange-line mr-2"></i> Mes Emprunts
+                        </a>
+                        @if(Auth::user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="block text-primary font-medium hover:text-primary/80 transition-colors">
+                                <i class="ri-admin-line mr-2"></i> Administration
+                            </a>
+                        @endif
+                    @endauth
+                    
+                    @guest
+                        <a href="{{ route('register') }}" class="block hover:text-primary transition-colors">
+                            <i class="ri-user-add-line mr-2"></i> Inscription
+                        </a>
+                    @endguest
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        @yield('content')
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">BookShare</h3>
+                    <p class="text-gray-300">
+                        Partagez vos livres avec la communauté et découvrez de nouvelles lectures grâce aux autres passionnés.
+                    </p>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Liens Rapides</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{{ route('home') }}" class="text-gray-300 hover:text-white transition-colors">Accueil</a></li>
+                        <li><a href="{{ route('books.index') }}" class="text-gray-300 hover:text-white transition-colors">Livres</a></li>
+                        @auth
+                            <li><a href="{{ route('books.my') }}" class="text-gray-300 hover:text-white transition-colors">Mes Livres</a></li>
+                            <li><a href="{{ route('loans.index') }}" class="text-gray-300 hover:text-white transition-colors">Mes Emprunts</a></li>
+                        @endauth
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="ri-mail-line mr-2"></i>
+                            <a href="mailto:info@bookshare.com" class="text-gray-300 hover:text-white transition-colors">info@bookshare.com</a>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="ri-phone-line mr-2"></i>
+                            <span class="text-gray-300">+33 (0)1 23 45 67 89</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="ri-map-pin-line mr-2"></i>
+                            <span class="text-gray-300">123 Rue des Livres, Paris</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-4 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400">&copy; {{ date('Y') }} BookShare. Tous droits réservés.</p>
+                
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-xl">
+                        <i class="ri-facebook-fill"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-xl">
+                        <i class="ri-twitter-fill"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-xl">
+                        <i class="ri-instagram-fill"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    
+                    // Toggle icon
+                    const icon = mobileMenuButton.querySelector('i');
+                    if (icon.classList.contains('ri-menu-line')) {
+                        icon.classList.remove('ri-menu-line');
+                        icon.classList.add('ri-close-line');
+                    } else {
+                        icon.classList.remove('ri-close-line');
+                        icon.classList.add('ri-menu-line');
+                    }
+                });
+            }
+        });
+    </script>
+    
+    @stack('scripts')
+</body>
+</html>

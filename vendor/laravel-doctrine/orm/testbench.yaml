@@ -1,0 +1,21 @@
+providers:
+  - LaravelDoctrine\ORM\DoctrineServiceProvider
+
+laravel: ./workbench
+workbench:
+  start: '/'
+  install: true
+  health: false
+  discovers:
+    web: false
+    api: false
+    commands: false
+    components: false
+    views: false
+  build:
+    - asset-publish
+    - create-sqlite-db
+    - db-wipe
+  assets:
+    - laravel-assets
+  sync: []
